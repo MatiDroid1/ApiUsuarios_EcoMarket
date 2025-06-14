@@ -28,6 +28,12 @@ public class UsuarioService {
         return ur.findByRut(rut).orElse(null);
     }
 
+    public Usuario buscarXid(Long id){
+        return ur.findById(id).orElse(null);
+    }
+
+
+
     public void eliminarPorRut(String rut) {
         ur.deleteByRut(rut);
     }

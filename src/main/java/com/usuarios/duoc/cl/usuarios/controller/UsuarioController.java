@@ -39,15 +39,25 @@ public class UsuarioController {
         }
     }
     
-    @GetMapping("/{rut}")
-    public ResponseEntity<?> buscarPorRut(@PathVariable String rut){
-        Usuario usuario = usuarioService.buscarPorRut(rut);
-        if(usuario == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Usuario no encontrado");
-        } else {
-            return ResponseEntity.ok(usuario);
-        }
+   @GetMapping("/rut/{rut}")
+public ResponseEntity<?> buscarPorRut(@PathVariable String rut){
+    Usuario usuario = usuarioService.buscarPorRut(rut);
+    if(usuario == null) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Usuario no encontrado");
+    } else {
+        return ResponseEntity.ok(usuario);
     }
+}
+
+@GetMapping("/id/{id}")
+public ResponseEntity<?> buscarXid(@PathVariable Long id){
+    Usuario usuario = usuarioService.buscarXid(id);
+    if(usuario == null) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Usuario no encontrado");
+    } else {
+        return ResponseEntity.ok(usuario);
+    }
+}
 
     @PostMapping
    public ResponseEntity<?> crearUsuario(@RequestBody Usuario usu){
