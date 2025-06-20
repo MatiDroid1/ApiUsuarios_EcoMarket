@@ -1,6 +1,7 @@
 package com.usuarios.duoc.cl.usuarios.controller;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.apache.catalina.connector.Response;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,10 +17,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.usuarios.duoc.cl.usuarios.dto.UsuarioDTO;
+import com.usuarios.duoc.cl.usuarios.dto.UsuarioRequestDTO;
+import com.usuarios.duoc.cl.usuarios.dto.UsuarioResponseDTO;
 import com.usuarios.duoc.cl.usuarios.model.Usuario;
 import com.usuarios.duoc.cl.usuarios.services.UsuarioService;
-
-
 
 @RestController
 @RequestMapping("/api/v1/usuarios")
@@ -28,81 +29,83 @@ public class UsuarioController {
     @Autowired
     private UsuarioService usuarioService;
 
+    // Listar todos los usuarios
     @GetMapping
     public ResponseEntity<List<Usuario>> listarUsuarios() {
         List<Usuario> usuarios = usuarioService.listarTodos();
-        if(usuarios.isEmpty()) {
+        if (usuarios.isEmpty()) {
             return ResponseEntity.noContent().build();
-            //return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No hay usuarios registrados");
-        } else {
-            return ResponseEntity.ok(usuarios);
         }
+        return ResponseEntity.ok(usuarios);
     }
-    
-   @GetMapping("/rut/{rut}")
-public ResponseEntity<?> buscarPorRut(@PathVariable String rut){
-    Usuario usuario = usuarioService.buscarPorRut(rut);
-    if(usuario == null) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Usuario no encontrado");
-    } else {
+
+    // Buscar usuario por rut
+    @GetMapping("/rut/{rut}")
+    public ResponseEntity<?> buscarPorRut(@PathVariable String rut) {
+        Usuario usuario = usuarioService.buscarPorRut(rut);
+        if (usuario == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Usuario no encontrado");
+        }
         return ResponseEntity.ok(usuario);
     }
-}
 
-@GetMapping("/id/{id}")
-public ResponseEntity<?> buscarXid(@PathVariable Long id){
-    Usuario usuario = usuarioService.buscarXid(id);
-    if(usuario == null) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Usuario no encontrado");
-    } else {
+    // Buscar usuario por id
+    @GetMapping("/id/{id}")
+    public ResponseEntity<?> buscarPorId(@PathVariable Long id) {
+        Usuario usuario = usuarioService.buscarXid(id);
+        if (usuario == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Usuario no encontrado");
+        }
         return ResponseEntity.ok(usuario);
     }
-}
 
+    // Crear usuario nuevo
     @PostMapping
-   public ResponseEntity<?> crearUsuario(@RequestBody Usuario usu){
-        try{
-            Usuario usuarioExistente = usuarioService.buscarPorRut(usu.getRut());
+    public ResponseEntity<?> crearUsuario(@RequestBody Usuario usuario) {
+        try {
+            Usuario usuarioExistente = usuarioService.buscarPorRut(usuario.getRut());
             if (usuarioExistente != null) {
                 return ResponseEntity.status(HttpStatus.CONFLICT).body("El usuario ya existe");
             }
-            usuarioService.guardar(usu);
-            return ResponseEntity.status(HttpStatus.CREATED).body("Usuario creado con exito");
-        }catch (Exception e) {
+            usuarioService.guardar(usuario);
+            return ResponseEntity.status(HttpStatus.CREATED).body("Usuario creado con éxito");
+        } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error al crear usuario");
         }
-   }
+    }
 
+    // Actualizar usuario por rut
     @PutMapping("/{rut}")
-    public ResponseEntity<?> actualizarUsuario(@PathVariable String rut, @RequestBody Usuario usu) {
-        try{
+    public ResponseEntity<?> actualizarUsuario(@PathVariable String rut, @RequestBody Usuario usuario) {
+        try {
             Usuario usuarioExistente = usuarioService.buscarPorRut(rut);
             if (usuarioExistente == null) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Usuario no encontrado");
             }
-            usuarioExistente.setNombre(usu.getNombre());
-            usuarioExistente.setEmail(usu.getEmail());
-            usuarioExistente.setPasswordHash(usu.getPasswordHash());
-            usuarioExistente.setRolId(usu.getRolId());
-            usuarioExistente.setTelefono(usu.getTelefono());
-            usuarioExistente.setDireccion(usu.getDireccion());
-            usuarioExistente.setTipoUsuario(usu.getTipoUsuario());
-            usuarioExistente.setActivo(usu.getActivo());
+            // Actualiza solo campos editables, puedes agregar más si quieres
+            usuarioExistente.setNombre(usuario.getNombre());
+            usuarioExistente.setEmail(usuario.getEmail());
+            usuarioExistente.setPasswordHash(usuario.getPasswordHash());
+            usuarioExistente.setRolId(usuario.getRolId());
+            usuarioExistente.setTelefono(usuario.getTelefono());
+            usuarioExistente.setDireccion(usuario.getDireccion());
+            usuarioExistente.setTipoUsuario(usuario.getTipoUsuario());
+            usuarioExistente.setActivo(usuario.getActivo());
+
             usuarioService.guardar(usuarioExistente);
-            return ResponseEntity.ok("Usuario actualizado con exito");
-        }catch (Exception e) {
+            return ResponseEntity.ok("Usuario actualizado con éxito");
+        } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error al actualizar usuario");
         }
     }
 
-   @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody UsuarioDTO request) {
-        Usuario usuario = usuarioService.buscarPorRut(request.getRut());
-        
-        if (usuario == null || !usuario.getPasswordHash().equals(request.getPassword())) {
+    // Login básico
+    @PostMapping("/login")
+    public ResponseEntity<?> login(@RequestBody Usuario loginRequest) {
+        Usuario usuario = usuarioService.buscarPorRut(loginRequest.getRut());
+        if (usuario == null || !usuario.getPasswordHash().equals(loginRequest.getPasswordHash())) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Rut o contraseña inválidos");
         }
-
         return ResponseEntity.ok("Login exitoso");
     }
 }
